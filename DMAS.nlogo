@@ -4,6 +4,7 @@ breed [ no-masks no-mask ]
 turtles-own [
   infected?
   compliant?
+  theory-of-mind
 ]
 
 to setup
@@ -19,7 +20,8 @@ to setup
     set size 1
     set infected? false
     set compliant? true
-    setxy random-pxcor random-pycor
+    set theory-of-mind random 2
+    move-to-empty-patch
   ]
 
   create-no-masks number-of-agents [
@@ -28,9 +30,87 @@ to setup
     set size 1
     set infected? false
     set compliant? true
-    setxy random-pxcor random-pycor
+    setxy theory-of-mind random 2
+    move-to-empty-patch
   ]
 
+  ask n-of initial-infected turtles [
+    set infected? true
+    set color red
+  ]
+end
+
+to move-to-empty-patch
+  let possible-patch one-of patches with [not any? turtles-here]
+  if possible-patch != nobody [
+    move-to possible-patch
+  ]
+end
+
+to infect-neighbors
+  ;infected agents will infect neighbors with 50% chance
+  ask turtles-on neighbors [
+    if not infected? and breed = no-masks [
+      if ( random 100 < 50 ) [
+        set infected? true
+        set color red
+      ]
+    ]
+  ]
+end
+
+to become-mask
+  set breed masks
+  set shape "mask"
+  set color white
+end
+
+to become-no-mask
+  set breed no-masks
+  set shape "face happy"
+  set color yellow
+end
+
+to move-to-empty-neighbor
+  let empty-neighbor one-of neighbors with [not any? turtles-here]
+  if empty-neighbor != nobody [
+    move-to empty-neighbor
+  ]
+end
+
+to go
+
+  ask turtles [
+
+    ;infected agents will infect neighbors
+    if infected? [
+      infect-neighbors
+    ]
+
+    ifelse theory-of-mind = 1 [
+      ;70% chance to comply if they believe others will comply
+      ifelse (random 100 < 70) [
+        set compliant? true
+        if breed = no-masks [ become-mask ]
+      ] [
+        set compliant? false
+        if breed = masks [ become-no-mask ]
+      ]
+    ] [
+      ifelse (random 100 < 30 ) [
+        set compliant? true
+        if breed = no-masks [ become-mask ]
+      ] [
+        set compliant? false
+        if breed = masks [ become-no-mask ]
+      ]
+    ]
+
+    ;move
+    move-to-empty-neighbor
+  ]
+
+  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -58,7 +138,7 @@ GRAPHICS-WINDOW
 0
 1
 ticks
-30.0
+1.0
 
 SLIDER
 18
@@ -107,13 +187,13 @@ NIL
 NIL
 NIL
 NIL
-1
+0
 
 SLIDER
-23
-126
-195
-159
+18
+101
+190
+134
 number-of-agents
 number-of-agents
 0
@@ -123,6 +203,97 @@ number-of-agents
 1
 NIL
 HORIZONTAL
+
+SLIDER
+17
+143
+189
+176
+initial-infected
+initial-infected
+0
+100
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+28
+192
+85
+237
+masks
+count masks
+17
+1
+11
+
+MONITOR
+104
+193
+169
+238
+no-masks
+count no-masks
+17
+1
+11
+
+PLOT
+4
+247
+204
+397
+Compliance
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"masks" 1.0 0 -13791810 true "" "plot count masks"
+"no-masks" 1.0 0 -5825686 true "" "plot count no-masks"
+
+BUTTON
+532
+476
+607
+509
+go once
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
+
+PLOT
+5
+405
+205
+555
+Infections
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2674135 true "" "plot count turtles with [infected? = true]"
 
 @#$#@#$#@
 ## WHAT IS IT?
