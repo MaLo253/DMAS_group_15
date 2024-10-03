@@ -10,6 +10,8 @@ def default_strategy(I, R, C, H):
         p = 0.34*I + 0.33*(R * (100 - C)/100) + 0.33*C
     elif H == 0:
         p = 0.34*(-I) + 0.33*(R * (100 - C)/100) + 0.33*C
+    elif H == 2:
+        p = 0.5*(R * (100 - C)/100) + 0.5*C
     normalized_p = (p + 100) / 200  # Shift and scale
     return normalized_p
 
